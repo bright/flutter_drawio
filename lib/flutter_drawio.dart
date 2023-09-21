@@ -8,6 +8,7 @@ export 'src/drawing/drawing_barrel.dart'
         DrawingController,
         DrawingPainter,
         ShapeDrawing,
+        LineDrawing,
         SketchDrawing,
         DrawingMode,
         Shape,
