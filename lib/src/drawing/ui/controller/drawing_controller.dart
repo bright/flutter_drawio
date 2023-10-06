@@ -235,6 +235,10 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
       currentlyActiveDrawing = null;
       changeDrawings(drawings);
     } else {
+      if (drawingMode == DrawingMode.erase) {
+        changeDrawings(drawings);
+      }
+
       currentlyActiveDrawing = drawing;
     }
   }
@@ -340,10 +344,7 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
   }
 
   Color get color {
-    return sketchMetadata.color ??
-        shapeMetadata.color ??
-        lineMetadata.color ??
-        Colors.black;
+    return sketchMetadata.color ?? shapeMetadata.color ?? lineMetadata.color ?? Colors.black;
   }
 
   DrawingController copy({
@@ -403,12 +404,9 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
             .cast<Map>()
             .map((data) => Drawing.fromMap(data.cast()))
             .toList(),
-        lineMetadata:
-            DrawingMetadata.fromMap((map['lineMetadata'] as Map).cast()),
-        shapeMetadata:
-            DrawingMetadata.fromMap((map['shapeMetadata'] as Map).cast()),
-        sketchMetadata:
-            DrawingMetadata.fromMap((map['sketchMetadata'] as Map).cast()),
+        lineMetadata: DrawingMetadata.fromMap((map['lineMetadata'] as Map).cast()),
+        shapeMetadata: DrawingMetadata.fromMap((map['shapeMetadata'] as Map).cast()),
+        sketchMetadata: DrawingMetadata.fromMap((map['sketchMetadata'] as Map).cast()),
         shape: Shape.values[map['shape'] as int],
       );
     if (color != null) {

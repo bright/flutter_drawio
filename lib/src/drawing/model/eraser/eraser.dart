@@ -1,10 +1,10 @@
+import 'dart:developer';
 import 'dart:ui';
 
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
 
 part 'erase_mode.dart';
-
 part 'region.dart';
 
 /// This class carries data and methods/logic for erasing a drawing.
@@ -89,8 +89,44 @@ class Eraser {
       secondPoint.toOffset,
     );
 
-    return rect.contains(region.maxPoint.toOffset) ||
-        rect.contains(region.minPoint.toOffset);
+    return rect.contains(region.maxPoint.toOffset) || rect.contains(region.minPoint.toOffset);
+  }
+
+  bool _lineDrawingEraseTest(LineDrawing line, Region region) {
+    if (line.deltas.length <= 1) return true;
+    final PointDouble firstPoint = line.deltas.first.point;
+    final PointDouble secondPoint = line.deltas
+        .lastWhere(
+          (element) => element.operation == DrawingOperation.neutral,
+        )
+        .point;
+
+    final Path path = Path();
+
+    path
+      ..moveTo(firstPoint.x, firstPoint.y)
+      ..lineTo(secondPoint.x, secondPoint.y);
+
+    List<PathMetric> metrics = path.computeMetrics().toList();
+
+    double minDistance = double.infinity;
+    for (PathMetric metric in metrics) {
+      for (double i = 0; i < metric.length; i += 1) {
+        Tangent? tangent = metric.getTangentForOffset(i);
+        if (tangent != null) {
+          Offset? pathPoint = tangent.position;
+          Offset vector = Offset(region.centre.x, region.centre.y) - pathPoint;
+          double distance = vector.distance;
+          vector = vector / distance;
+          if (distance < minDistance) {
+            minDistance = distance;
+          }
+        }
+      }
+    }
+    log('DISTANCE: $minDistance');
+
+    return minDistance <= region.radius;
   }
 
   /// This is a pure function that removes a drawing from a list of [Drawing]s
@@ -98,17 +134,18 @@ class Eraser {
     final Region region = this.region;
     drawings = List.from(drawings);
 
-    drawings.removeWhere(
-      (drawing) {
-        if (drawing is ShapeDrawing) {
-          return _shapeDrawingEraseTest(drawing, region);
-        }
+    final Drawing? drawingToRemove = drawings.lastWhereOrNull((drawing) {
+      if (drawing is ShapeDrawing) {
+        return _shapeDrawingEraseTest(drawing, region);
+      } else if (drawing is LineDrawing) {
+        return _lineDrawingEraseTest(drawing, region);
+      }
+      return drawing.deltas.containsWhere(
+        (value) => region.containsPoint(value.point),
+      );
+    });
 
-        return drawing.deltas.containsWhere(
-          (value) => region.containsPoint(value.point),
-        );
-      },
-    );
+    drawings.remove(drawingToRemove);
 
     return drawings;
   }
@@ -137,8 +174,8 @@ class Eraser {
 
     final Drawing drawingTobeErasedCopy = drawingToBeErased;
 
-    final DrawingDelta erasedDelta = drawingToBeErased.deltas
-        .firstWhere((element) => region.containsPoint(element.point));
+    final DrawingDelta erasedDelta =
+        drawingToBeErased.deltas.firstWhere((element) => region.containsPoint(element.point));
 
     final int erasedDeltaIndex = drawingToBeErased.deltas.indexOf(erasedDelta);
 
@@ -154,15 +191,13 @@ class Eraser {
       drawings.replace(drawingTobeErasedCopy, [drawingToBeErased]);
     } else if (drawingToBeErased.deltas.isLast(erasedDelta)) {
       final int length = drawingToBeErased.deltas.length;
-      drawingToBeErased.deltas[length - 2] = drawingToBeErased
-          .deltas[length - 2]
-          .copyWith(operation: DrawingOperation.end);
+      drawingToBeErased.deltas[length - 2] =
+          drawingToBeErased.deltas[length - 2].copyWith(operation: DrawingOperation.end);
       drawingToBeErased.deltas.removeLast();
       drawings.replace(drawingTobeErasedCopy, [drawingToBeErased]);
     } else {
-      drawingToBeErased.deltas[erasedDeltaIndex - 1] = drawingToBeErased
-          .deltas[erasedDeltaIndex - 1]
-          .copyWith(operation: DrawingOperation.end);
+      drawingToBeErased.deltas[erasedDeltaIndex - 1] =
+          drawingToBeErased.deltas[erasedDeltaIndex - 1].copyWith(operation: DrawingOperation.end);
 
       drawingToBeErased.deltas[erasedDeltaIndex + 1] = drawingToBeErased
           .deltas[erasedDeltaIndex + 1]
