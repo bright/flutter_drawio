@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
@@ -84,12 +84,20 @@ class Eraser {
     if (shape.deltas.length <= 1) return true;
     final PointDouble firstPoint = shape.deltas.first.point;
     final PointDouble secondPoint = shape.deltas.last.point;
-    final Rect rect = Rect.fromPoints(
-      firstPoint.toOffset,
-      secondPoint.toOffset,
-    );
+    if (shape.shape == Shape.circle) {
+      final centerPoint = _findCenterPoint(firstPoint, secondPoint);
+      final radius = (firstPoint.toOffset - centerPoint.toOffset).distance;
+      final clickPoint = region.centre.toOffset;
+      final distance = (clickPoint - centerPoint.toOffset).distance;
 
-    return rect.contains(region.maxPoint.toOffset) || rect.contains(region.minPoint.toOffset);
+      return distance <= radius;
+    } else {
+      final Rect rect = Rect.fromPoints(
+        firstPoint.toOffset,
+        secondPoint.toOffset,
+      );
+      return rect.contains(region.maxPoint.toOffset) || rect.contains(region.minPoint.toOffset);
+    }
   }
 
   bool _lineDrawingEraseTest(LineDrawing line, Region region) {
@@ -124,9 +132,20 @@ class Eraser {
         }
       }
     }
-    log('DISTANCE: $minDistance');
 
     return minDistance <= region.radius;
+  }
+
+  Point<double> _findCenterPoint(PointDouble point1, PointDouble point2) {
+    double centerX = (point1.x + point2.x) / 2;
+    double centerY = (point1.y + point2.y) / 2;
+
+    print('point1: $point1');
+    print('point2: $point2');
+    print('centerX: $centerX');
+    print('centerY: $centerY');
+
+    return Point(centerX, centerY);
   }
 
   /// This is a pure function that removes a drawing from a list of [Drawing]s
