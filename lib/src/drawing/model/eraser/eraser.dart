@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
+import 'package:uuid/uuid.dart';
 
 part 'erase_mode.dart';
 part 'region.dart';
@@ -49,6 +50,7 @@ class Eraser {
             break;
           case SketchDrawing:
             drawing = SketchDrawing(
+              id: const Uuid().v4(),
               deltas: [delta],
               metadata: defaultMetadata ?? delta.metadata,
             );
@@ -139,11 +141,6 @@ class Eraser {
   Point<double> _findCenterPoint(PointDouble point1, PointDouble point2) {
     double centerX = (point1.x + point2.x) / 2;
     double centerY = (point1.y + point2.y) / 2;
-
-    print('point1: $point1');
-    print('point2: $point2');
-    print('centerX: $centerX');
-    print('centerY: $centerY');
 
     return Point(centerX, centerY);
   }

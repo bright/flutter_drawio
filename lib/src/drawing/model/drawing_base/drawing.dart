@@ -1,6 +1,8 @@
+import 'dart:math';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
+import 'package:uuid/uuid.dart';
 
 part 'actionables/drawing_mode.dart';
 
@@ -8,10 +10,12 @@ part 'drawing_type.dart';
 
 /// This is the base class for all [Drawing] objects.
 abstract base class Drawing with EquatableMixin {
+  final String id;
   final List<DrawingDelta> deltas;
   final DrawingMetadata? metadata;
 
   const Drawing({
+    required this.id,
     required this.deltas,
     this.metadata,
   });
@@ -21,6 +25,21 @@ abstract base class Drawing with EquatableMixin {
     List<DrawingDelta>? deltas,
     DrawingMetadata? metadata,
   });
+
+  Drawing move({required PointDouble delta}) {
+    return copyWith(
+      deltas: deltas
+          .map(
+            (element) => element.copyWith(
+              point: Point(
+                element.point.x + delta.x,
+                element.point.y + delta.y,
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
 
   /// This function is used to convert a list of [DrawingDelta]s and a [DrawingMetadata]to a [Drawing]
   static Drawing convertDeltasToDrawing<T extends Drawing>({
@@ -40,12 +59,14 @@ abstract base class Drawing with EquatableMixin {
     switch (T) {
       case ShapeDrawing:
         return ShapeDrawing(
+          id: const Uuid().v4(),
           shape: shape!,
           deltas: deltas,
           metadata: metadata,
         );
       default:
         return SketchDrawing(
+          id: const Uuid().v4(),
           deltas: deltas,
           metadata: metadata,
         );

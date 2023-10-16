@@ -5,7 +5,8 @@ enum DrawingMode {
   erase,
   sketch,
   shape,
-  line;
+  line,
+  edit;
 
   factory DrawingMode.fromString(String data) {
     data = data.cleanLower;

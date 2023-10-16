@@ -3,6 +3,7 @@ import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
 /// This class is used to represent a [Drawing] of type [DrawingType.sketch].
 base class SketchDrawing extends Drawing {
   SketchDrawing({
+    required super.id,
     required super.deltas,
     super.metadata,
   });
@@ -15,6 +16,7 @@ base class SketchDrawing extends Drawing {
     return SketchDrawing(
       deltas: deltas ?? this.deltas,
       metadata: metadata ?? this.metadata,
+      id: id,
     );
   }
 
@@ -22,6 +24,7 @@ base class SketchDrawing extends Drawing {
   String toString() {
     return '''\n
     SketchDrawing{
+      id: $id,
       deltas: $deltas,
       metadata: $metadata,
     }''';
@@ -30,6 +33,7 @@ base class SketchDrawing extends Drawing {
   @override
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'type': DrawingType.sketch.index,
       'deltas': deltas.map((e) => e.toMap()).toList(),
       'metadata': metadata?.toMap(),
@@ -38,6 +42,7 @@ base class SketchDrawing extends Drawing {
 
   factory SketchDrawing.fromMap(Map<String, dynamic> map) {
     return SketchDrawing(
+      id: map['id'],
       deltas: (map['deltas'] as List)
           .cast<Map>()
           .map<DrawingDelta>((e) => DrawingDelta.fromMap(e.cast()))

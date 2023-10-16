@@ -21,70 +21,50 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
 
     switch (drawing.shape) {
       case Shape.rectangle:
-        drawRectangle(
-          canvas: canvas,
-          size: size,
-          drawing: drawing,
-          paint: paint,
-        );
+        final rect = _prepareRectangle(drawing: drawing);
+        canvas.drawRect(rect, paint);
         break;
       case Shape.circle:
-        drawCircle(
-          canvas: canvas,
-          size: size,
-          drawing: drawing,
-          paint: paint,
-        );
+        final rect = _prepareCircle(drawing: drawing);
+        final double radius = rect.size.magnitude / 2;
+        canvas.drawCircle(rect.center, radius, paint);
         break;
       case Shape.triangle:
-        drawTriangle(
-          canvas: canvas,
-          size: size,
-          drawing: drawing,
-          paint: paint,
-        );
+        final path = _prepareTriangle(drawing: drawing);
+        canvas.drawPath(path, paint);
         break;
       case Shape.star:
-        drawStar(
-          canvas: canvas,
-          size: size,
-          drawing: drawing,
-          paint: paint,
-        );
+        final path = _prepareStar(drawing: drawing);
+        canvas.drawPath(path, paint);
         break;
     }
   }
 
-  void drawCircle({
-    required Canvas canvas,
-    required Size size,
-    required Drawing drawing,
-    required Paint paint,
-  }) {
-    final DrawingDelta firstDelta = drawing.deltas.firstWhere(
-      (element) => element.operation == DrawingOperation.start,
-    );
-    final DrawingDelta secondDelta = drawing.deltas.lastWhere(
-      (element) =>
-          element.operation == DrawingOperation.neutral ||
-          element.operation == DrawingOperation.end,
-    );
+  @override
+  bool contains(PointDouble point, ShapeDrawing drawing) {
+    switch (drawing.shape) {
+      case Shape.rectangle:
+        final rect = _prepareRectangle(drawing: drawing);
+        return rect.contains(point.toOffset);
 
-    final Rect rect = Rect.fromPoints(
-      firstDelta.point.toOffset,
-      secondDelta.point.toOffset,
-    );
+      case Shape.circle:
+        const margin = 1.0;
+        final rect = _prepareCircle(drawing: drawing);
+        final double distanceToCenter = (point.toOffset - rect.center).distance;
+        final double radius = rect.size.magnitude / 2;
+        return distanceToCenter <= (radius + margin);
 
-    final double radius = rect.size.magnitude / 2;
-    canvas.drawCircle(rect.center, radius, paint);
+      case Shape.triangle:
+        final path = _prepareTriangle(drawing: drawing);
+        return path.contains(point.toOffset);
+
+      case Shape.star:
+        final path = _prepareStar(drawing: drawing);
+        return path.contains(point.toOffset);
+    }
   }
 
-  void drawTriangle({
-    required Canvas canvas,
-    required Size size,
-    required Drawing drawing,
-    required Paint paint,
-  }) {
+  Path _prepareTriangle({required Drawing drawing}) {
     final DrawingDelta firstDelta = drawing.deltas.firstWhere(
       (element) => element.operation == DrawingOperation.start,
     );
@@ -93,7 +73,6 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
           element.operation == DrawingOperation.neutral ||
           element.operation == DrawingOperation.end,
     );
-    final Path path = Path();
 
     final double x1 = firstDelta.point.x;
     final double x2 = secondDelta.point.x;
@@ -103,21 +82,18 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
 
     final PointDouble topVertex = PointDouble((x1 + x2) / 2, y2);
 
+    final Path path = Path();
+
     path.moveTo(x1, y1);
     path.lineTo(topVertex.x, topVertex.y);
 
     path.lineTo(x2, y1);
     path.lineTo(x1, y1);
 
-    canvas.drawPath(path, paint);
+    return path;
   }
 
-  void drawStar({
-    required Canvas canvas,
-    required Size size,
-    required Drawing drawing,
-    required Paint paint,
-  }) {
+  Path _prepareStar({required Drawing drawing}) {
     final DrawingDelta firstDelta = drawing.deltas.firstWhere(
       (element) => element.operation == DrawingOperation.start,
     );
@@ -200,16 +176,10 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
     path.lineTo(v5.x, v5.y);
     path.lineTo(m5.x, m5.y);
     path.lineTo(v1.x, v1.y);
-
-    canvas.drawPath(path, paint);
+    return path;
   }
 
-  void drawRectangle({
-    required Canvas canvas,
-    required Size size,
-    required Drawing drawing,
-    required Paint paint,
-  }) {
+  Rect _prepareCircle({required Drawing drawing}) {
     final DrawingDelta firstDelta = drawing.deltas.firstWhere(
       (element) => element.operation == DrawingOperation.start,
     );
@@ -219,11 +189,25 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
           element.operation == DrawingOperation.end,
     );
 
-    final Rect rect = Rect.fromPoints(
+    return Rect.fromPoints(
       firstDelta.point.toOffset,
       secondDelta.point.toOffset,
     );
+  }
 
-    canvas.drawRect(rect, paint);
+  Rect _prepareRectangle({required Drawing drawing}) {
+    final DrawingDelta firstDelta = drawing.deltas.firstWhere(
+      (element) => element.operation == DrawingOperation.start,
+    );
+    final DrawingDelta secondDelta = drawing.deltas.lastWhere(
+      (element) =>
+          element.operation == DrawingOperation.neutral ||
+          element.operation == DrawingOperation.end,
+    );
+
+    return Rect.fromPoints(
+      firstDelta.point.toOffset,
+      secondDelta.point.toOffset,
+    );
   }
 }

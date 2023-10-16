@@ -8,6 +8,7 @@ base class ShapeDrawing extends Drawing {
   final Shape shape;
 
   ShapeDrawing({
+    required super.id,
     required this.shape,
     required super.deltas,
     super.metadata,
@@ -23,12 +24,14 @@ base class ShapeDrawing extends Drawing {
       shape: shape ?? this.shape,
       deltas: deltas ?? this.deltas,
       metadata: metadata ?? this.metadata,
+      id: id,
     );
   }
 
   @override
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'type': DrawingType.shape.index,
       'shape': shape.index,
       'deltas': deltas.map((e) => e.toMap()).toList(),
@@ -38,6 +41,7 @@ base class ShapeDrawing extends Drawing {
 
   factory ShapeDrawing.fromMap(Map<String, dynamic> map) {
     return ShapeDrawing(
+      id: map['id'],
       shape: Shape.values[(map['shape'] as int)],
       deltas: (map['deltas'] as List)
           .cast<Map>()
