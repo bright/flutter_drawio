@@ -7,35 +7,45 @@ class PrimaryDrawingsPainter extends CustomPainter {
   final DrawingPainter<ShapeDrawing> shapeDrawingPainter;
   final DrawingPainter<SketchDrawing> sketchDrawingPainter;
   final DrawingPainter<LineDrawing> lineDrawingPainter;
+  final DrawingPainter<TextDrawing> textDrawingPainter;
 
   const PrimaryDrawingsPainter({
     required this.shapeDrawingPainter,
     required this.sketchDrawingPainter,
     required this.lineDrawingPainter,
+    required this.textDrawingPainter,
     required this.drawing,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    switch (drawing.runtimeType) {
-      case ShapeDrawing:
+    final type = drawing;
+    switch (type) {
+      case ShapeDrawing():
         shapeDrawingPainter.paintDrawing(
           canvas,
           size,
-          drawing as ShapeDrawing,
+          type,
         );
         break;
-      case LineDrawing:
+      case LineDrawing():
         lineDrawingPainter.paintDrawing(
           canvas,
           size,
-          drawing as LineDrawing,
+          type,
         );
-      case SketchDrawing:
+      case SketchDrawing():
         sketchDrawingPainter.paintDrawing(
           canvas,
           size,
-          drawing as SketchDrawing,
+          type,
+        );
+        break;
+      case TextDrawing():
+        textDrawingPainter.paintDrawing(
+          canvas,
+          size,
+          type,
         );
         break;
     }
@@ -43,7 +53,6 @@ class PrimaryDrawingsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is PrimaryDrawingsPainter &&
-        oldDelegate.drawing != drawing;
+    return oldDelegate is PrimaryDrawingsPainter && oldDelegate.drawing != drawing;
   }
 }

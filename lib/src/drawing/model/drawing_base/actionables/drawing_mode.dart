@@ -1,4 +1,4 @@
-part of '../drawing.dart';
+import 'package:flutter_drawio/src/utils/function/extensions/extensions.dart';
 
 /// This defines the drawing mode of the [DrawingController].
 enum DrawingMode {
@@ -6,7 +6,8 @@ enum DrawingMode {
   sketch,
   shape,
   line,
-  edit;
+  edit,
+  text;
 
   factory DrawingMode.fromString(String data) {
     data = data.cleanLower;
