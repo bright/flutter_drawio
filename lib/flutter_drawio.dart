@@ -19,4 +19,8 @@ export 'src/drawing/drawing_barrel.dart'
         DrawingOperation,
         SecondaryDrawingsPainter,
         DrawingCanvas,
+        LineDrawingPainter,
+        ShapePainter,
+        SketchPainter,
+        TextDrawingPainter,
         DrawingTextStyle;
