@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
-import 'package:flutter_drawio/src/drawing/sub_features/text_drawing/painters/text_drawing_painter.dart';
 import 'package:flutter_drawio/src/drawing/ui/controller/edit_drawing_item.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
 import 'package:uuid/uuid.dart';

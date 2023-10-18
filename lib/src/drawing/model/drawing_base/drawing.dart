@@ -36,7 +36,7 @@ sealed class Drawing with EquatableMixin {
   }
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [id, ...deltas, metadata];
 }
 
 class LineDrawing extends Drawing {
