@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
+import 'package:flutter_drawio/src/utils/constants/typedefs.dart';
 
 /// This is the base class for all [DrawingPainter]s.
 ///
@@ -8,4 +9,6 @@ abstract base class DrawingPainter<T extends Drawing> {
   const DrawingPainter();
 
   void paintDrawing(Canvas canvas, Size size, T drawing);
+
+  bool contains(PointDouble point, T drawing);
 }

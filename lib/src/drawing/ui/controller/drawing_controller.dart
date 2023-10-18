@@ -1,7 +1,11 @@
+import 'dart:math';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
+import 'package:flutter_drawio/src/drawing/ui/controller/edit_drawing_item.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
+import 'package:uuid/uuid.dart';
 
 /// This is the brain class of the package and is responsible for managing the state of the drawing process.
 class DrawingController extends ChangeNotifier with EquatableMixin {
@@ -19,6 +23,11 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
 
   Drawings _drawings = [];
   Drawing? _currentlyActiveDrawing;
+  EditDrawingItem? _editDrawingItem;
+
+  final DrawingPainter<ShapeDrawing> _shapeDrawingPainter = const ShapePainter();
+  final DrawingPainter<SketchDrawing> _sketchDrawingPainter = const SketchPainter();
+  final DrawingPainter<LineDrawing> _lineDrawingPainter = const LineDrawingPainter();
 
   Drawings get drawings => List.from(_drawings);
 
@@ -34,18 +43,69 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
 
   final List<DrawingMode> _actionStack = List.from([]);
 
+  void onPanStart(DrawingDelta delta) {
+    if (drawingMode == DrawingMode.edit) {
+      final Drawing? touchedDrawing =
+          _findTouchedShape(drawings: drawings, touchPoint: delta.point);
+
+      if (touchedDrawing != null) {
+        _editDrawingItem = EditDrawingItem(id: touchedDrawing.id, startPoint: delta.point);
+      }
+    } else {
+      draw(delta);
+    }
+  }
+
+  void onPanEnd(DrawingDelta delta) {
+    if (drawingMode == DrawingMode.erase) return;
+
+    if (drawingMode == DrawingMode.edit) {
+      _editDrawingItem = null;
+    } else {
+      draw(delta);
+    }
+  }
+
+  void onPanUpdate(DrawingDelta delta) {
+    if (drawingMode == DrawingMode.edit) {
+      if (_editDrawingItem != null) {
+        final offsetToMove = delta.point.toOffset - _editDrawingItem!.startPoint.toOffset;
+        _move(_editDrawingItem!.id, Point(offsetToMove.dx, offsetToMove.dy));
+        _editDrawingItem = _editDrawingItem!.copyWith(delta.point);
+      }
+    } else {
+      draw(delta);
+    }
+  }
+
+  void _move(String id, PointDouble offset) {
+    _drawings = List.from(
+      drawings.map((drawing) {
+        if (drawing.id == id) {
+          return drawing.move(delta: offset);
+        } else {
+          return drawing;
+        }
+      }),
+    );
+    notifyListeners();
+  }
+
   void startDrawing() {
     currentlyActiveDrawing = switch (drawingMode) {
       DrawingMode.shape => ShapeDrawing(
+          id: const Uuid().v4(),
           metadata: metadataFor(),
           shape: shape,
           deltas: [],
         ),
       DrawingMode.line => LineDrawing(
+          id: const Uuid().v4(),
           deltas: [],
           metadata: metadataFor(),
         ),
       _ => SketchDrawing(
+          id: const Uuid().v4(),
           metadata: metadataFor(),
           deltas: [],
         ),
@@ -75,6 +135,8 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
         return shapeMetadata;
       case DrawingMode.line:
         return lineMetadata;
+      case DrawingMode.edit:
+        return const DrawingMetadata();
       case null:
         return metadataFor(DrawingMode.erase);
     }
@@ -162,7 +224,6 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
     sketchMetadata = sketchMetadata.copyWith(color: color);
     shapeMetadata = shapeMetadata.copyWith(color: color);
     lineMetadata = lineMetadata.copyWith(color: color);
-
     notifyListeners();
   }
 
@@ -228,6 +289,8 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
       case DrawingMode.line:
         drawing = _drawLine(delta, drawing!);
         break;
+      case DrawingMode.edit:
+        return;
     }
     //adds drawing if it's the last operation in the drawing, else updates the current drawing
     if (delta.operation == DrawingOperation.end) {
@@ -424,4 +487,25 @@ class DrawingController extends ChangeNotifier with EquatableMixin {
         _initialized,
         ..._drawings,
       ];
+
+  Drawing? _findTouchedShape({required List<Drawing> drawings, required Point<double> touchPoint}) {
+    for (Drawing drawing in drawings) {
+      switch (drawing.runtimeType) {
+        case ShapeDrawing:
+          if (_shapeDrawingPainter.contains(touchPoint, drawing as ShapeDrawing)) {
+            return drawing;
+          }
+          break;
+        case LineDrawing:
+          if (_lineDrawingPainter.contains(touchPoint, drawing as LineDrawing)) {
+            return drawing;
+          }
+        case SketchDrawing:
+          if (_sketchDrawingPainter.contains(touchPoint, drawing as SketchDrawing)) {
+            return drawing;
+          }
+      }
+    }
+    return null;
+  }
 }

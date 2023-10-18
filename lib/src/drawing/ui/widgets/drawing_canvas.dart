@@ -3,7 +3,6 @@ import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
 
 part 'canvases/primary_canvas.dart';
-
 part 'canvases/secondary_canvas.dart';
 
 class DrawingCanvas extends StatefulWidget {
@@ -25,6 +24,12 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   late final double xDrawingBounds = widget.size.width;
 
   DrawingController get controller => widget.controller;
+
+  @override
+  void initState() {
+    if (!controller.initialized) controller.initialize();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,42 +59,16 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
             ),
           ),
           GestureDetector(
-            onPanStart: panStart,
-            onPanEnd: (details) {
-              if (controller.drawingMode == DrawingMode.erase) return;
-              panEnd(details);
-            },
-            onPanUpdate: panUpdate,
+            onPanStart: _panStart,
+            onPanEnd: _panEnd,
+            onPanUpdate: _panUpdate,
           ),
         ],
       ),
     );
   }
 
-  void changeColor(Color color) {
-    controller.changeColor(color);
-  }
-
-  final ValueNotifier<int?> dragChangeNotifier = ValueNotifier<int?>(null);
-
-  int computeDurationDifference(Duration duration) {
-    final int durationDifference = dragChangeNotifier.value == null
-        ? 0
-        : duration.inMilliseconds - dragChangeNotifier.value!;
-    dragChangeNotifier.value = duration.inMilliseconds;
-    return durationDifference;
-  }
-
-  double computeDragSpeed(double distance, Duration duration) {
-    final int time = computeDurationDifference(duration);
-    return time == 0 ? 0 : distance / time;
-  }
-
-  PointDouble pointDoubleFromOffset(Offset offset) {
-    return PointDouble(offset.dx, offset.dy);
-  }
-
-  void panStart(DragStartDetails details) {
+  void _panStart(DragStartDetails details) {
     final DrawingDelta delta = DrawingDelta(
       point: PointDouble(
         details.localPosition.dx,
@@ -98,10 +77,10 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
       operation: DrawingOperation.start,
     );
 
-    controller.draw(delta);
+    controller.onPanStart(delta);
   }
 
-  void panEnd(DragEndDetails details) {
+  void _panEnd(DragEndDetails details) {
     final DrawingDelta delta = DrawingDelta(
       point: controller.drawings.isEmpty
           ? const PointDouble(0, 0)
@@ -109,28 +88,22 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
       operation: DrawingOperation.end,
     );
 
-    controller.draw(delta);
+    controller.onPanEnd(delta);
   }
 
-  bool isOutOfBounds(Offset offset) {
-    return (offset.dx < 0 || offset.dx > xDrawingBounds) ||
-        (offset.dy < 0 || offset.dy > yDrawingBounds);
-  }
-
-  void panUpdate(DragUpdateDetails details) {
-    if (isOutOfBounds(details.localPosition)) return;
+  void _panUpdate(DragUpdateDetails details) {
+    if (_isOutOfBounds(details.localPosition)) return;
 
     final DrawingDelta delta = DrawingDelta(
-      point: pointDoubleFromOffset(details.localPosition),
+      point: PointDouble(details.localPosition.dx, details.localPosition.dy),
       operation: DrawingOperation.neutral,
     );
 
-    controller.draw(delta);
+    controller.onPanUpdate(delta);
   }
 
-  @override
-  void initState() {
-    if (!controller.initialized) controller.initialize();
-    super.initState();
+  bool _isOutOfBounds(Offset offset) {
+    return (offset.dx < 0 || offset.dx > xDrawingBounds) ||
+        (offset.dy < 0 || offset.dy > yDrawingBounds);
   }
 }

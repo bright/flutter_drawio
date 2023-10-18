@@ -85,7 +85,12 @@ class _ExamplePageState extends State<ExamplePage> {
             icon: const Icon(Icons.signal_cellular_0_bar_rounded),
             onPressed: () => controller.changeShape(Shape.triangle),
           ),
-
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => controller.drawingMode == DrawingMode.edit
+                ? controller.changeDrawingMode(DrawingMode.shape)
+                : controller.changeDrawingMode(DrawingMode.edit),
+          ),
           const Spacer(),
         ],
       ),
