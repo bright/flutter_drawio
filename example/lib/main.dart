@@ -27,7 +27,10 @@ class ExamplePage extends StatefulWidget {
 }
 
 class _ExamplePageState extends State<ExamplePage> {
-  final DrawingController controller = DrawingController();
+  final DrawingController controller = DrawingController(
+    onAddTextItem: (point) {},
+    onEditTextItem: (item) {},
+  );
 
   @override
   void dispose() {
@@ -90,6 +93,14 @@ class _ExamplePageState extends State<ExamplePage> {
             onPressed: () => controller.drawingMode == DrawingMode.edit
                 ? controller.changeDrawingMode(DrawingMode.shape)
                 : controller.changeDrawingMode(DrawingMode.edit),
+          ),
+          IconButton(
+            icon: const Icon(Icons.text_fields_outlined),
+            onPressed: () => controller.changeDrawingMode(DrawingMode.text),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => controller.changeDrawingMode(DrawingMode.erase),
           ),
           const Spacer(),
         ],

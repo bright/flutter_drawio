@@ -5,6 +5,7 @@ class _SecondaryCanvas extends StatelessWidget {
   final DrawingPainter<ShapeDrawing> shapeDrawingPainter;
   final DrawingPainter<SketchDrawing> sketchDrawingPainter;
   final DrawingPainter<LineDrawing> lineDrawingPainter;
+  final DrawingPainter<TextDrawing> textDrawingPainter;
 
   const _SecondaryCanvas({
     Key? key,
@@ -12,6 +13,7 @@ class _SecondaryCanvas extends StatelessWidget {
     required this.shapeDrawingPainter,
     required this.sketchDrawingPainter,
     required this.lineDrawingPainter,
+    required this.textDrawingPainter,
   }) : super(key: key);
 
   @override
@@ -29,6 +31,7 @@ class _SecondaryCanvas extends StatelessWidget {
             shapeDrawingPainter: shapeDrawingPainter,
             sketchDrawingPainter: sketchDrawingPainter,
             lineDrawingPainter: lineDrawingPainter,
+            textDrawingPainter: textDrawingPainter,
             drawings: controller.drawings,
           ),
         );

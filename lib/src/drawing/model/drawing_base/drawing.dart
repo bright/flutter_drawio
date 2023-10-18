@@ -2,14 +2,8 @@ import 'dart:math';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
-import 'package:uuid/uuid.dart';
 
-part 'actionables/drawing_mode.dart';
-
-part 'drawing_type.dart';
-
-/// This is the base class for all [Drawing] objects.
-abstract base class Drawing with EquatableMixin {
+sealed class Drawing with EquatableMixin {
   final String id;
   final List<DrawingDelta> deltas;
   final DrawingMetadata? metadata;
@@ -41,58 +35,99 @@ abstract base class Drawing with EquatableMixin {
     );
   }
 
-  /// This function is used to convert a list of [DrawingDelta]s and a [DrawingMetadata]to a [Drawing]
-  static Drawing convertDeltasToDrawing<T extends Drawing>({
-    required List<DrawingDelta> deltas,
-    required DrawingMetadata? metadata,
-    Shape? shape,
-  }) {
-    assert(
-      () {
-        if (T == ShapeDrawing) {
-          return shape != null;
-        }
-        return true;
-      }(),
-      'Shape cannot be null when constructing a [ShapeDrawing] object',
-    );
-    switch (T) {
-      case ShapeDrawing:
-        return ShapeDrawing(
-          id: const Uuid().v4(),
-          shape: shape!,
-          deltas: deltas,
-          metadata: metadata,
-        );
-      default:
-        return SketchDrawing(
-          id: const Uuid().v4(),
-          deltas: deltas,
-          metadata: metadata,
-        );
-    }
-  }
+  @override
+  List<Object?> get props => [id];
+}
+
+class LineDrawing extends Drawing {
+  LineDrawing({
+    required super.id,
+    required super.deltas,
+    super.metadata,
+  });
 
   @override
-  List<Object?> get props => [metadata, ...deltas];
+  Drawing copyWith({
+    List<DrawingDelta>? deltas,
+    DrawingMetadata? metadata,
+  }) {
+    return LineDrawing(
+      deltas: deltas ?? this.deltas,
+      metadata: metadata ?? this.metadata,
+      id: id,
+    );
+  }
+}
 
-  Map<String, dynamic> toMap();
+class ShapeDrawing extends Drawing {
+  final Shape shape;
 
-  /// This method is used to create a new instance of this class from a map
-  factory Drawing.fromMap(Map<String, dynamic> map) {
-    final DrawingType type =
-        DrawingType.values[int.parse(map['type'].toString())];
+  ShapeDrawing({
+    required super.id,
+    required this.shape,
+    required super.deltas,
+    super.metadata,
+  });
 
-    switch (type) {
-      case DrawingType.shape:
-        return ShapeDrawing.fromMap(map);
-      case DrawingType.sketch:
-        return SketchDrawing.fromMap(map);
-      case DrawingType.line:
-        // TODO: Handle this case.
-        break;
-    }
-    //TODO: Change
-    return SketchDrawing.fromMap(map);
+  @override
+  ShapeDrawing copyWith({
+    final Shape? shape,
+    List<DrawingDelta>? deltas,
+    DrawingMetadata? metadata,
+  }) {
+    return ShapeDrawing(
+      shape: shape ?? this.shape,
+      deltas: deltas ?? this.deltas,
+      metadata: metadata ?? this.metadata,
+      id: id,
+    );
+  }
+}
+
+class SketchDrawing extends Drawing {
+  SketchDrawing({
+    required super.id,
+    required super.deltas,
+    super.metadata,
+  });
+
+  @override
+  SketchDrawing copyWith({
+    List<DrawingDelta>? deltas,
+    DrawingMetadata? metadata,
+  }) {
+    return SketchDrawing(
+      deltas: deltas ?? this.deltas,
+      metadata: metadata ?? this.metadata,
+      id: id,
+    );
+  }
+}
+
+class TextDrawing extends Drawing {
+  final String text;
+  final DrawingTextStyle style;
+  TextDrawing({
+    required super.id,
+    required super.deltas,
+    required this.style,
+    required this.text,
+    super.metadata,
+  });
+
+  @override
+  Drawing copyWith({
+    List<DrawingDelta>? deltas,
+    DrawingMetadata? metadata,
+    String? text,
+    DrawingTextStyle? style,
+  }) {
+    return TextDrawing(
+      id: id,
+      deltas: deltas ?? this.deltas,
+      style: style ?? this.style,
+      text: text ?? this.text,
+      metadata: metadata,
+    );
   }
 }

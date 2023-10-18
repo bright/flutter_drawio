@@ -5,6 +5,7 @@ class _PrimaryCanvas extends StatelessWidget {
   final DrawingPainter<ShapeDrawing> shapeDrawingPainter;
   final DrawingPainter<SketchDrawing> sketchDrawingPainter;
   final DrawingPainter<LineDrawing> lineDrawingPainter;
+  final DrawingPainter<TextDrawing> textDrawingPainter;
 
   const _PrimaryCanvas({
     Key? key,
@@ -12,6 +13,7 @@ class _PrimaryCanvas extends StatelessWidget {
     required this.lineDrawingPainter,
     required this.shapeDrawingPainter,
     required this.sketchDrawingPainter,
+    required this.textDrawingPainter,
   }) : super(key: key);
 
   @override
@@ -27,6 +29,7 @@ class _PrimaryCanvas extends StatelessWidget {
                 lineDrawingPainter: lineDrawingPainter,
                 shapeDrawingPainter: shapeDrawingPainter,
                 sketchDrawingPainter: sketchDrawingPainter,
+                textDrawingPainter: textDrawingPainter,
                 drawing: value.currentlyActiveDrawing!,
               ),
             ),

@@ -10,14 +10,13 @@ export 'src/drawing/drawing_barrel.dart'
         ShapeDrawing,
         LineDrawing,
         SketchDrawing,
+        TextDrawing,
         DrawingMode,
         Shape,
         DrawingDelta,
         DrawingMetadata,
         DrawingType,
-        Eraser,
-        EraseMode,
-        Region,
         DrawingOperation,
         SecondaryDrawingsPainter,
-        DrawingCanvas;
+        DrawingCanvas,
+        DrawingTextStyle;

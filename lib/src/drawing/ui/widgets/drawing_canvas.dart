@@ -1,5 +1,7 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
+import 'package:flutter_drawio/src/drawing/sub_features/text_drawing/painters/text_drawing_painter.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
 
 part 'canvases/primary_canvas.dart';
@@ -46,6 +48,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
               lineDrawingPainter: const LineDrawingPainter(),
               shapeDrawingPainter: const ShapePainter(),
               sketchDrawingPainter: const SketchPainter(),
+              textDrawingPainter: const TextDrawingPainter(),
             ),
           ),
           SizedBox(
@@ -56,9 +59,12 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
               lineDrawingPainter: const LineDrawingPainter(),
               shapeDrawingPainter: const ShapePainter(),
               sketchDrawingPainter: const SketchPainter(),
+              textDrawingPainter: const TextDrawingPainter(),
             ),
           ),
           GestureDetector(
+            onLongPressStart: _onLongPressStart,
+            onTapDown: _onTapDown,
             onPanStart: _panStart,
             onPanEnd: _panEnd,
             onPanUpdate: _panUpdate,
@@ -66,6 +72,14 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
         ],
       ),
     );
+  }
+
+  void _onLongPressStart(LongPressStartDetails details) {
+    controller.onLongPressStart(Point(details.localPosition.dx, details.localPosition.dy));
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    controller.onTapDown(Point(details.localPosition.dx, details.localPosition.dy));
   }
 
   void _panStart(DragStartDetails details) {
