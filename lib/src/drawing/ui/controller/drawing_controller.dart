@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
-import 'package:flutter_drawio/src/drawing/sub_features/text_drawing/painters/text_drawing_painter.dart';
 import 'package:flutter_drawio/src/drawing/ui/controller/edit_drawing_item.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
 import 'package:uuid/uuid.dart';
@@ -27,6 +26,7 @@ class DrawingController extends ChangeNotifier {
   Drawings _drawings = [];
   Drawing? _currentlyActiveDrawing;
   EditDrawingItem? _editDrawingItem;
+  PointDouble? _lastTouchedPoint;
 
   final DrawingPainter<ShapeDrawing> _shapeDrawingPainter = const ShapePainter();
   final DrawingPainter<SketchDrawing> _sketchDrawingPainter = const SketchPainter();
@@ -89,6 +89,8 @@ class DrawingController extends ChangeNotifier {
   }
 
   void onTapDown(PointDouble point) {
+    _lastTouchedPoint = point;
+
     if (drawingMode == DrawingMode.text) {
       onAddTextItem(point);
     }
@@ -96,15 +98,17 @@ class DrawingController extends ChangeNotifier {
 
   void onPanStart(DrawingDelta delta) {
     if (drawingMode == DrawingMode.edit) {
-      final Drawing? touchedDrawing =
-          _findTouchedShape(drawings: drawings, touchPoint: delta.point);
+      final point = _lastTouchedPoint ?? delta.point;
+      final Drawing? touchedDrawing = _findTouchedShape(drawings: drawings, touchPoint: point);
 
       if (touchedDrawing != null) {
-        _editDrawingItem = EditDrawingItem(id: touchedDrawing.id, startPoint: delta.point);
+        _editDrawingItem = EditDrawingItem(id: touchedDrawing.id, startPoint: point);
       }
     } else {
       draw(delta);
     }
+
+    _lastTouchedPoint = null;
   }
 
   void onPanEnd(DrawingDelta delta) {
@@ -115,6 +119,8 @@ class DrawingController extends ChangeNotifier {
     } else {
       draw(delta);
     }
+
+    _lastTouchedPoint = null;
   }
 
   void onPanUpdate(DrawingDelta delta) {
