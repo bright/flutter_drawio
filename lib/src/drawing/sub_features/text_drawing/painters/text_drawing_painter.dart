@@ -9,7 +9,7 @@ base class TextDrawingPainter extends DrawingPainter<TextDrawing> {
 
   @override
   bool contains(PointDouble point, TextDrawing drawing) {
-    final rect = _prepareTextRectangle(drawing: drawing);
+    final rect = _prepareTextRectangle(drawing: drawing, padding: 10);
     return rect.contains(point.toOffset);
   }
 
@@ -56,7 +56,7 @@ base class TextDrawingPainter extends DrawingPainter<TextDrawing> {
     return textPainter;
   }
 
-  Rect _prepareTextRectangle({required TextDrawing drawing}) {
+  Rect _prepareTextRectangle({required TextDrawing drawing, double padding = 0}) {
     final textPainter = _prepareTextPainter(drawing);
     final drawingPoint = drawing.deltas.first.point.toOffset;
 
@@ -65,12 +65,12 @@ base class TextDrawingPainter extends DrawingPainter<TextDrawing> {
         return Rect.fromPoints(
           drawingPoint,
           drawingPoint + Offset(textPainter.width, textPainter.height),
-        );
+        ).inflate(padding);
       case Axis.vertical:
         return Rect.fromPoints(
           Offset(drawingPoint.dx - textPainter.height, drawingPoint.dy),
           Offset(drawingPoint.dx, drawingPoint.dy + textPainter.width),
-        );
+        ).inflate(padding);
     }
   }
 }

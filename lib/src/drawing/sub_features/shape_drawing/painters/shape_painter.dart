@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
@@ -42,20 +44,19 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
 
   @override
   bool contains(PointDouble point, ShapeDrawing drawing) {
+    const padding = 15.0;
+
     switch (drawing.shape) {
       case Shape.rectangle:
-        final rect = _prepareRectangle(drawing: drawing);
+        final rect = _prepareRectangle(drawing: drawing, padding: padding);
         return rect.contains(point.toOffset);
 
       case Shape.circle:
-        const margin = 1.0;
-        final rect = _prepareCircle(drawing: drawing);
-        final double distanceToCenter = (point.toOffset - rect.center).distance;
-        final double radius = rect.size.magnitude / 2;
-        return distanceToCenter <= (radius + margin);
+        final rect = _prepareCircle(drawing: drawing, padding: padding);
+        return rect.contains(point.toOffset);
 
       case Shape.triangle:
-        final path = _prepareTriangle(drawing: drawing);
+        final path = _prepareTriangle(drawing: drawing, padding: padding);
         return path.contains(point.toOffset);
 
       case Shape.star:
@@ -64,7 +65,7 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
     }
   }
 
-  Path _prepareTriangle({required Drawing drawing}) {
+  Path _prepareTriangle({required Drawing drawing, double padding = 0}) {
     final DrawingDelta firstDelta = drawing.deltas.firstWhere(
       (element) => element.operation == DrawingOperation.start,
     );
@@ -74,23 +75,55 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
           element.operation == DrawingOperation.end,
     );
 
-    final double x1 = firstDelta.point.x;
-    final double x2 = secondDelta.point.x;
+    final PointDouble point1 = Point(firstDelta.point.x, firstDelta.point.y);
+    final PointDouble point2 = Point(secondDelta.point.x, secondDelta.point.y);
 
-    final double y1 = firstDelta.point.y;
-    final double y2 = secondDelta.point.y;
+    final PointDouble topVertex = PointDouble((point1.x + point2.x) / 2, point2.y);
 
-    final PointDouble topVertex = PointDouble((x1 + x2) / 2, y2);
+    final PointDouble middlePoint =
+        Point((point1.x + point2.x + topVertex.x) / 3, (point1.y + point1.y + topVertex.y) / 3);
+
+    final PointDouble inflatedP1 = _inflateTrianglePoint(
+      point: point1,
+      middlePoint: middlePoint,
+      padding: padding,
+    );
+
+    final PointDouble inflatedTopVertex = _inflateTrianglePoint(
+      point: topVertex,
+      middlePoint: middlePoint,
+      padding: padding,
+    );
+
+    final PointDouble inflatedP2 = _inflateTrianglePoint(
+      point: point2,
+      middlePoint: middlePoint,
+      padding: padding,
+    );
 
     final Path path = Path();
 
-    path.moveTo(x1, y1);
-    path.lineTo(topVertex.x, topVertex.y);
-
-    path.lineTo(x2, y1);
-    path.lineTo(x1, y1);
+    path.moveTo(inflatedP1.x, inflatedP1.y);
+    path.lineTo(inflatedTopVertex.x, inflatedTopVertex.y);
+    path.lineTo(inflatedP2.x, inflatedP1.y);
+    path.lineTo(inflatedP1.x, inflatedP1.y);
 
     return path;
+  }
+
+  PointDouble _inflateTrianglePoint({
+    required PointDouble point,
+    required PointDouble middlePoint,
+    required double padding,
+  }) {
+    final double dx = point.x - middlePoint.x;
+    final double dy = point.y - middlePoint.y;
+
+    final double distance = sqrt(dx * dx + dy * dy);
+    final double newX = point.x + (padding * dx) / distance;
+    final double newY = point.y + (padding * dy) / distance;
+
+    return PointDouble(newX, newY);
   }
 
   Path _prepareStar({required Drawing drawing}) {
@@ -179,7 +212,7 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
     return path;
   }
 
-  Rect _prepareCircle({required Drawing drawing}) {
+  Rect _prepareCircle({required Drawing drawing, double padding = 0}) {
     final DrawingDelta firstDelta = drawing.deltas.firstWhere(
       (element) => element.operation == DrawingOperation.start,
     );
@@ -192,10 +225,10 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
     return Rect.fromPoints(
       firstDelta.point.toOffset,
       secondDelta.point.toOffset,
-    );
+    ).inflate(padding);
   }
 
-  Rect _prepareRectangle({required Drawing drawing}) {
+  Rect _prepareRectangle({required Drawing drawing, double padding = 0}) {
     final DrawingDelta firstDelta = drawing.deltas.firstWhere(
       (element) => element.operation == DrawingOperation.start,
     );
@@ -208,6 +241,6 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
     return Rect.fromPoints(
       firstDelta.point.toOffset,
       secondDelta.point.toOffset,
-    );
+    ).inflate(padding);
   }
 }
