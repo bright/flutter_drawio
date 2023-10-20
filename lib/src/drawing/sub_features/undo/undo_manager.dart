@@ -23,4 +23,8 @@ class UndoManager {
     }
     return null;
   }
+
+  void clear() {
+    _operations.clear();
+  }
 }

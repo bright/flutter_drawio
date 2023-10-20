@@ -236,6 +236,12 @@ class DrawingController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clear() {
+    _drawings = List.from(drawings);
+    _undoManager.clear();
+    notifyListeners();
+  }
+
   void draw(DrawingDelta delta) {
     Drawings drawings = List.from(_drawings);
     if (delta.operation == DrawingOperation.start) {
