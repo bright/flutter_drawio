@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_drawio/flutter_drawio.dart';
 
-import 'change_notifier_builder.dart';
-
 void main() {
   runApp(const ExampleApp());
 }
@@ -30,10 +28,21 @@ class _ExamplePageState extends State<ExamplePage> {
   final DrawingController controller = DrawingController(
     onAddTextItem: (point) {},
     onEditTextItem: (item) {},
-  );
+  )..initialize();
+
+  @override
+  void initState() {
+    super.initState();
+    controller.addListener(_update);
+  }
+
+  void _update() {
+    setState(() {});
+  }
 
   @override
   void dispose() {
+    controller.removeListener(_update);
     controller.dispose();
     super.dispose();
   }
@@ -45,30 +54,23 @@ class _ExamplePageState extends State<ExamplePage> {
         actions: [
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: () => controller.clearDrawings(),
-          ),
-          IconButton(
             icon: const Icon(Icons.color_lens),
             onPressed: () => controller.changeColor(
               controller.color == Colors.red ? Colors.blue : Colors.red,
             ),
           ),
-          ChangeNotifierBuilder(
-            listenable: controller,
-            builder: (context, controller) => IconButton(
-              icon: switch (controller.drawingMode) {
-                DrawingMode.line => const Icon(Icons.shape_line),
-                DrawingMode.shape => const Icon(Icons.format_shapes),
-                _ => const Icon(Icons.brush),
+          IconButton(
+            icon: switch (controller.drawingMode) {
+              DrawingMode.line => const Icon(Icons.shape_line),
+              DrawingMode.shape => const Icon(Icons.format_shapes),
+              _ => const Icon(Icons.brush),
+            },
+            onPressed: () => controller.changeDrawingMode(
+              switch (controller.drawingMode) {
+                DrawingMode.line => DrawingMode.sketch,
+                DrawingMode.shape => DrawingMode.line,
+                _ => DrawingMode.shape,
               },
-              onPressed: () => controller.changeDrawingMode(
-                switch (controller.drawingMode) {
-                  DrawingMode.line => DrawingMode.sketch,
-                  DrawingMode.shape => DrawingMode.line,
-                  _ => DrawingMode.shape,
-                },
-              ),
             ),
           ),
           //add icon buttons for all the shapes
@@ -101,6 +103,14 @@ class _ExamplePageState extends State<ExamplePage> {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () => controller.changeDrawingMode(DrawingMode.erase),
+          ),
+          IconButton(
+            icon: const Icon(Icons.undo),
+            onPressed: controller.canUndo ? () => controller.undo() : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.redo),
+            onPressed: controller.canRedo ? () => controller.redo() : null,
           ),
           const Spacer(),
         ],

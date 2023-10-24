@@ -23,7 +23,6 @@ class _SecondaryCanvas extends StatelessWidget {
       buildWhen: (previous, next) =>
           // ignore: invalid_use_of_protected_member
           previous?.mutableDrawing == next.mutableDrawing,
-      key: UniqueKey(),
       builder: (_, controller) {
         return CustomPaint(
           key: const ValueKey('DrawingsCustomPaintKey'),
