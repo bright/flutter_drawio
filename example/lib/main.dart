@@ -108,7 +108,10 @@ class _ExamplePageState extends State<ExamplePage> {
             icon: const Icon(Icons.undo),
             onPressed: controller.canUndo ? () => controller.undo() : null,
           ),
-
+          IconButton(
+            icon: const Icon(Icons.redo),
+            onPressed: controller.canRedo ? () => controller.redo() : null,
+          ),
           const Spacer(),
         ],
       ),

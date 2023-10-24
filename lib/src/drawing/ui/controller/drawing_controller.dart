@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
-import 'package:flutter_drawio/src/drawing/sub_features/undo/draw_operation.dart';
-import 'package:flutter_drawio/src/drawing/sub_features/undo/undo_manager.dart';
+import 'package:flutter_drawio/src/drawing/sub_features/history_manager/draw_operation.dart';
+import 'package:flutter_drawio/src/drawing/sub_features/history_manager/drawing_history_manager.dart';
 import 'package:flutter_drawio/src/drawing/ui/controller/edit_drawing_item.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
 import 'package:uuid/uuid.dart';
@@ -24,7 +24,7 @@ class DrawingController extends ChangeNotifier {
   Drawing? _currentlyActiveDrawing;
   EditDrawingItem? _editDrawingItem;
   PointDouble? _lastTouchedPoint;
-  final UndoManager _undoManager = UndoManager();
+  final DrawingHistoryManager _drawingHistoryManager = DrawingHistoryManager();
 
   final DrawingPainter<ShapeDrawing> _shapeDrawingPainter = const ShapePainter();
   final DrawingPainter<SketchDrawing> _sketchDrawingPainter = const SketchPainter();
@@ -43,12 +43,20 @@ class DrawingController extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get canUndo => _undoManager.canUndo;
+  bool get canUndo => _drawingHistoryManager.canUndo;
+  bool get canRedo => _drawingHistoryManager.canRedo;
 
   void undo() {
-    final operation = _undoManager.undo();
+    final operation = _drawingHistoryManager.undo();
     if (operation != null) {
       _undo(operation);
+    }
+  }
+
+  void redo() {
+    final operation = _drawingHistoryManager.redo();
+    if (operation != null) {
+      _redo(operation);
     }
   }
 
@@ -57,15 +65,20 @@ class DrawingController extends ChangeNotifier {
     required DrawingTextStyle style,
     required PointDouble point,
   }) {
+    final item = TextDrawing(
+      id: const Uuid().v4(),
+      style: style,
+      text: text,
+      deltas: [DrawingDelta(point: point)],
+    );
+
     _drawings = List.from([
       ...drawings,
-      TextDrawing(
-        id: const Uuid().v4(),
-        style: style,
-        text: text,
-        deltas: [DrawingDelta(point: point)],
-      ),
+      item,
     ]);
+
+    _drawingHistoryManager.addOperation(AddObjectOperation(addedObject: item));
+
     notifyListeners();
   }
 
@@ -76,8 +89,15 @@ class DrawingController extends ChangeNotifier {
   }) {
     _drawings = _drawings.map((item) {
       if (item.id == id) {
-        _undoManager.addOperation(EditObjectOperation(id: item.id, objectBeforeEdit: item));
-        return (item as TextDrawing).copyWith(text: text, style: style);
+        final editedItem = (item as TextDrawing).copyWith(text: text, style: style);
+        _drawingHistoryManager.addOperation(
+          EditObjectOperation(
+            id: item.id,
+            objectBeforeEdit: item,
+            objectAfterEdit: editedItem,
+          ),
+        );
+        return editedItem;
       } else {
         return item;
       }
@@ -126,10 +146,11 @@ class DrawingController extends ChangeNotifier {
 
     if (drawingMode == DrawingMode.edit) {
       if (_editDrawingItem != null) {
-        _undoManager.addOperation(
+        _drawingHistoryManager.addOperation(
           MoveObjectOperation(
             id: _editDrawingItem!.id,
             startDeltas: _editDrawingItem!.startDeltas,
+            endDeltas: _drawings.firstWhere((item) => item.id == _editDrawingItem!.id).deltas,
           ),
         );
       }
@@ -237,8 +258,8 @@ class DrawingController extends ChangeNotifier {
   }
 
   void clear() {
-    _drawings = List.from(drawings);
-    _undoManager.clear();
+    _drawings = [];
+    _drawingHistoryManager.clear();
     notifyListeners();
   }
 
@@ -286,7 +307,7 @@ class DrawingController extends ChangeNotifier {
     //adds drawing if it's the last operation in the drawing, else updates the current drawing
     if (delta.operation == DrawingOperation.end) {
       drawings.add(drawing!);
-      _undoManager.addOperation(AddObjectOperation(id: drawing.id));
+      _drawingHistoryManager.addOperation(AddObjectOperation(addedObject: drawing));
       currentlyActiveDrawing = null;
       changeDrawings(drawings);
     } else {
@@ -310,7 +331,7 @@ class DrawingController extends ChangeNotifier {
     final Drawing? drawingToRemove = _findTouchedShape(drawings: drawings, touchPoint: point);
     if (drawingToRemove != null) {
       copy.removeWhere((element) => element.id == drawingToRemove.id);
-      _undoManager.addOperation(DeleteObjectOperation(deletedObject: drawingToRemove));
+      _drawingHistoryManager.addOperation(DeleteObjectOperation(deletedObject: drawingToRemove));
     }
     return copy;
   }
@@ -360,7 +381,7 @@ class DrawingController extends ChangeNotifier {
     List<Drawing> drawingsCopy = drawings.toList();
     switch (operation) {
       case AddObjectOperation():
-        drawingsCopy.removeWhere((item) => item.id == operation.id);
+        drawingsCopy.removeWhere((item) => item.id == operation.addedObject.id);
 
       case MoveObjectOperation():
         drawingsCopy = drawingsCopy.map((item) {
@@ -382,6 +403,37 @@ class DrawingController extends ChangeNotifier {
 
       case DeleteObjectOperation():
         drawingsCopy.add(operation.deletedObject);
+    }
+
+    changeDrawings(drawingsCopy);
+  }
+
+  void _redo(DrawOperation operation) {
+    List<Drawing> drawingsCopy = drawings.toList();
+    switch (operation) {
+      case AddObjectOperation():
+        drawingsCopy.add(operation.addedObject);
+
+      case MoveObjectOperation():
+        drawingsCopy = drawingsCopy.map((item) {
+          if (item.id == operation.id) {
+            return item.copyWith(deltas: operation.endDeltas);
+          } else {
+            return item;
+          }
+        }).toList();
+
+      case EditObjectOperation():
+        drawingsCopy = drawingsCopy.map((item) {
+          if (item.id == operation.id) {
+            return operation.objectAfterEdit;
+          } else {
+            return item;
+          }
+        }).toList();
+
+      case DeleteObjectOperation():
+        drawingsCopy.removeWhere((item) => item.id == operation.deletedObject.id);
     }
 
     changeDrawings(drawingsCopy);
