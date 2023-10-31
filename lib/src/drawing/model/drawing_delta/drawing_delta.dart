@@ -43,20 +43,4 @@ class DrawingDelta with EquatableMixin {
 
   @override
   List<Object?> get props => [point, operation, metadata];
-
-  Map<String, dynamic> toMap() {
-    return {
-      'point': point.toMap(),
-      'operation': operation.toSerializerString,
-      'metadata': metadata?.toMap(),
-    };
-  }
-
-  factory DrawingDelta.fromMap(Map<String, dynamic> map) {
-    return DrawingDelta(
-      point: UtilFunctions.pointDoubleFromMap((map['point'] as Map).cast()),
-      operation: DrawingOperation.fromString((map['operation'])),
-      metadata: DrawingMetadata.fromMap((map['metadata'] as Map).cast()),
-    );
-  }
 }

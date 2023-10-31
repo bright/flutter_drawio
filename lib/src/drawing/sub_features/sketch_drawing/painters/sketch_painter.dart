@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
 import 'package:flutter_drawio/src/drawing/drawing_barrel.dart';
 import 'package:flutter_drawio/src/drawing/sub_features/sketch_drawing/painters/sketch_drawing_model.dart';
 import 'package:flutter_drawio/src/utils/utils_barrel.dart';
@@ -39,8 +38,8 @@ base class SketchPainter extends DrawingPainter<SketchDrawing> {
 
   SketchDrawingModel _create(SketchDrawing drawing) {
     final Paint paint = Paint()
-      ..color = drawing.metadata?.color ?? Colors.black
-      ..strokeWidth = drawing.metadata?.strokeWidth ?? 4
+      ..color = drawing.metadata.color
+      ..strokeWidth = drawing.metadata.strokeWidth
       ..style = PaintingStyle.stroke;
 
     final Path path = Path();
@@ -66,10 +65,8 @@ base class SketchPainter extends DrawingPainter<SketchDrawing> {
   }) {
     switch (drawingDelta.operation) {
       case DrawingOperation.start:
-        paint.color = drawingDelta.metadata?.color ?? drawing.metadata?.color ?? paint.color;
-        paint.strokeWidth = drawingDelta.metadata?.strokeWidth ??
-            drawing.metadata?.strokeWidth ??
-            paint.strokeWidth;
+        paint.color = drawingDelta.metadata?.color ?? drawing.metadata.color;
+        paint.strokeWidth = drawingDelta.metadata?.strokeWidth ?? drawing.metadata.strokeWidth;
 
         path.moveTo(drawingDelta.point.x, drawingDelta.point.y);
         break;
@@ -77,10 +74,8 @@ base class SketchPainter extends DrawingPainter<SketchDrawing> {
         break;
       case DrawingOperation.neutral:
         {
-          paint.color = drawingDelta.metadata?.color ?? drawing.metadata?.color ?? paint.color;
-          paint.strokeWidth = drawingDelta.metadata?.strokeWidth ??
-              drawing.metadata?.strokeWidth ??
-              paint.strokeWidth;
+          paint.color = drawingDelta.metadata?.color ?? drawing.metadata.color;
+          paint.strokeWidth = drawingDelta.metadata?.strokeWidth ?? drawing.metadata.strokeWidth;
 
           if (drawing.deltas.isFirst(drawingDelta)) break;
 

@@ -2,21 +2,16 @@ part of 'drawing_delta.dart';
 
 /// This defines the styling data for any drawing.
 class DrawingMetadata with EquatableMixin {
-  final Color? color;
-  final double? strokeWidth;
+  final Color color;
+  final double strokeWidth;
 
   const DrawingMetadata({
-    this.color,
-    this.strokeWidth,
+    required this.color,
+    required this.strokeWidth,
   });
 
   @override
-  String toString() {
-    return '''DrawingDeltaMetadata{
-        color: $color,
-        strokeWidth: $strokeWidth
-      }''';
-  }
+  List<Object?> get props => [color, strokeWidth];
 
   DrawingMetadata copyWith({
     Color? color,
@@ -28,20 +23,5 @@ class DrawingMetadata with EquatableMixin {
     );
   }
 
-  @override
-  List<Object?> get props => [color, strokeWidth];
-
-  Map<String, dynamic> toMap() {
-    return {
-      'color': (color ?? Colors.black).toSerializerString,
-      'strokeWidth': strokeWidth,
-    };
-  }
-
-  factory DrawingMetadata.fromMap(Map<String, dynamic> map) {
-    return DrawingMetadata(
-      color: Color(int.parse(map['color'].toString())),
-      strokeWidth: (map['strokeWidth'] as num?)?.toDouble(),
-    );
-  }
+  static DrawingMetadata get initial => const DrawingMetadata(color: Colors.black, strokeWidth: 4);
 }

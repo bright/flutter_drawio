@@ -15,8 +15,8 @@ base class ShapePainter extends DrawingPainter<ShapeDrawing> {
     ShapeDrawing drawing,
   ) {
     final Paint paint = Paint()
-      ..color = drawing.metadata?.color ?? Colors.black
-      ..strokeWidth = drawing.metadata?.strokeWidth ?? 4
+      ..color = drawing.metadata.color
+      ..strokeWidth = drawing.metadata.strokeWidth
       ..style = PaintingStyle.stroke;
 
     if (drawing.deltas.length == 1) return;

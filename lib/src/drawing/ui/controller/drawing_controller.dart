@@ -350,7 +350,7 @@ class DrawingController extends ChangeNotifier {
     return drawnDrawings;
   }
 
-  Color get color => _drawingMetadata.color ?? Colors.black;
+  Color get color => _drawingMetadata.color;
 
   Drawing? _findTouchedShape({required List<Drawing> drawings, required Point<double> touchPoint}) {
     for (Drawing drawing in drawings) {

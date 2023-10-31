@@ -6,12 +6,12 @@ import 'package:flutter_drawio/src/utils/utils_barrel.dart';
 sealed class Drawing with EquatableMixin {
   final String id;
   final List<DrawingDelta> deltas;
-  final DrawingMetadata? metadata;
+  final DrawingMetadata metadata;
 
   const Drawing({
     required this.id,
     required this.deltas,
-    this.metadata,
+    required this.metadata,
   });
 
   /// This method is used to create a copy of the current [Drawing] object
@@ -43,7 +43,7 @@ class LineDrawing extends Drawing {
   LineDrawing({
     required super.id,
     required super.deltas,
-    super.metadata,
+    required super.metadata,
   });
 
   @override
@@ -66,7 +66,7 @@ class ShapeDrawing extends Drawing {
     required super.id,
     required this.shape,
     required super.deltas,
-    super.metadata,
+    required super.metadata,
   });
 
   @override
@@ -88,7 +88,7 @@ class SketchDrawing extends Drawing {
   SketchDrawing({
     required super.id,
     required super.deltas,
-    super.metadata,
+    required super.metadata,
   });
 
   @override
@@ -108,12 +108,11 @@ class TextDrawing extends Drawing {
   final String text;
   final DrawingTextStyle style;
   TextDrawing({
-    required super.id,
-    required super.deltas,
+    required String id,
+    required List<DrawingDelta> deltas,
     required this.style,
     required this.text,
-    super.metadata,
-  });
+  }) : super(id: id, deltas: deltas, metadata: DrawingMetadata.initial);
 
   @override
   Drawing copyWith({
@@ -127,7 +126,6 @@ class TextDrawing extends Drawing {
       deltas: deltas ?? this.deltas,
       style: style ?? this.style,
       text: text ?? this.text,
-      metadata: metadata,
     );
   }
 }

@@ -13,8 +13,8 @@ base class LineDrawingPainter extends DrawingPainter<LineDrawing> {
     if (drawing.deltas.length == 1) return;
 
     final Paint paint = Paint()
-      ..color = drawing.metadata?.color ?? Colors.black
-      ..strokeWidth = drawing.metadata?.strokeWidth ?? 4
+      ..color = drawing.metadata.color
+      ..strokeWidth = drawing.metadata.strokeWidth
       ..style = PaintingStyle.stroke;
 
     final Path path = Path()..moveTo(0, 0);
@@ -35,7 +35,7 @@ base class LineDrawingPainter extends DrawingPainter<LineDrawing> {
 
   @override
   bool contains(PointDouble point, LineDrawing drawing) {
-    final double buffer = (drawing.metadata?.strokeWidth ?? 4) + 10;
+    final double buffer = (drawing.metadata.strokeWidth) + 10;
     final double distance = _distanceFromPointToLine(point, drawing.deltas);
     return distance <= buffer;
   }
